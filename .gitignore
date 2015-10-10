@@ -20,9 +20,10 @@
 # Generated files
 bin/
 gen/
+*.iml
 
 # Gradle files
-.idea/
+.idea/*.*
 .gradle/
 build/
 /*/build/

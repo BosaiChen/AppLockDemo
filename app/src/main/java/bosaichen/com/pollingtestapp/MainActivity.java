@@ -1,12 +1,8 @@
 package bosaichen.com.pollingtestapp;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -15,9 +11,10 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int REQUEST_OPEN_USAGE = 1;
+    public static final String ACTION_USAGE_ACCESS_SETTINGS = "android.settings.USAGE_ACCESS_SETTINGS";
     private TextView mTVGrantUsage;
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
-    private static final String PERMISSION_USAGE_STATS = "android.permission.PACKAGE_USAGE_STATS";
+    public static final String PERMISSION_PACKAGE_USAGE_STATS = "android.permission.PACKAGE_USAGE_STATS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,19 +48,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        int permissionCheck = ContextCompat.checkSelfPermission(this, "android.permission.PACKAGE_USAGE_STATS");
-        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+        checkUsagePermission();
+    }
+
+    private void checkUsagePermission() {
+        if (Utils.hasUsageAccessPermission(getApplicationContext())) {
             mTVGrantUsage.setVisibility(View.GONE);
         } else {
             mTVGrantUsage.setVisibility(View.VISIBLE);
             mTVGrantUsage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{PERMISSION_USAGE_STATS},
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+                    Intent intent = new Intent(ACTION_USAGE_ACCESS_SETTINGS);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivityForResult(intent, REQUEST_OPEN_USAGE);
                 }
             });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_OPEN_USAGE) {
+            checkUsagePermission();
         }
     }
 }

@@ -5,6 +5,7 @@ import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class UsageAccessPollSolution extends ForegroundAppPollingSolution{
+public class UsageAccessPollSolution extends ForegroundAppPollingSolution {
     private UsageStatsManager mUsageStatsManager;
 
     public UsageAccessPollSolution(Context ctx) {
@@ -34,16 +35,16 @@ public class UsageAccessPollSolution extends ForegroundAppPollingSolution{
         long startTime = endTime - 5 * 1000;
         List<UsageStats> statsList = mUsageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, endTime);
 
-        if(statsList == null) {
+        if (statsList == null) {
             return;
         }
 
         // Sort the stats by the last time used
-        SortedMap<Long,UsageStats> mySortedMap = new TreeMap<>();
+        SortedMap<Long, UsageStats> mySortedMap = new TreeMap<>();
         for (UsageStats usageStats : statsList) {
-            mySortedMap.put(usageStats.getLastTimeUsed(),usageStats);
+            mySortedMap.put(usageStats.getLastTimeUsed(), usageStats);
         }
-        if(mySortedMap == null || mySortedMap.isEmpty()) {
+        if (mySortedMap == null || mySortedMap.isEmpty()) {
             return;
         }
 
@@ -59,12 +60,13 @@ public class UsageAccessPollSolution extends ForegroundAppPollingSolution{
             mCurrentApp = newPkg;
             // class name is not available implementing with getRunningAppProcesses(). Do not write logic relying on class name.
             final ComponentName foreground = new ComponentName(mCurrentApp, "");
-        final ComponentName background = new ComponentName(mPreviousApp, "");
-        final String toastNewPkg = newPkg;
-        Utils.runOnMainThread(mCtx, new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(mCtx.getApplicationContext(), toastNewPkg, Toast.LENGTH_SHORT).show();
+            final ComponentName background = new ComponentName(mPreviousApp, "");
+            final String toastNewPkg = newPkg;
+            Utils.runOnMainThread(mCtx, new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mCtx.getApplicationContext(), toastNewPkg, Toast.LENGTH_SHORT).show();
+                    mCtx.startService(new Intent(mCtx, LockScreen.class));
                 }
             });
         }

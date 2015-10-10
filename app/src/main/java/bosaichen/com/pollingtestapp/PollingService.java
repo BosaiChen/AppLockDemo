@@ -23,24 +23,10 @@ public class PollingService extends Service {
     private String currentPkg = "";
     private String previousPkg = "";
 
-//    private ServiceHandler mServiceHandler;
     private ForegroundAppPollingSolution mPollingSolution;
     private Timer timer;
 
-    /*private class ServiceHandler extends Handler {
-        public ServiceHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case APP_FOREGROUND_POLL:
-                    checkForegroundApp();
-                    break;
-            }
-        }
-    }*/
+    private boolean isPolling = false;
 
     @Override
     public void onCreate() {
@@ -48,10 +34,6 @@ public class PollingService extends Service {
         super.onCreate();
         HandlerThread thread = new HandlerThread("AppForegroundPollingServiceThread");
         thread.start();
-
-//        mServiceHandler = new ServiceHandler(thread.getLooper());
-
-//        startRepeatedPolling();
     }
 
     @Override
@@ -61,7 +43,6 @@ public class PollingService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-//        mServiceHandler.sendEmptyMessage(APP_FOREGROUND_POLL);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             mPollingSolution = new PreLPollSolution(this.getApplicationContext());
         } else {
@@ -76,6 +57,7 @@ public class PollingService extends Service {
                 mPollingSolution.pollForegroundApp();
             }
         }, 500, /*frequency*/1000);
+        isPolling = true;
         return START_STICKY;
     }
 
@@ -138,7 +120,12 @@ public class PollingService extends Service {
         if (timer != null) {
             timer.cancel();
             timer.purge();
+            isPolling = false;
         }
+    }
+
+    boolean isPolling() {
+        return isPolling;
     }
 
     private String findForegroundPkg() {
